@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>我的極速反應遊戲大堂</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            background-color: #0d0d13;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            padding: 20px;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        header {
+            text-align: center;
+            margin-top: 20px;
+            margin-bottom: 30px;
+        }
+        h1 {
+            font-size: 28px;
+            margin: 0;
+            color: #00ffcc;
+            text-shadow: 0 0 10px rgba(0, 255, 204, 0.6);
+            letter-spacing: 2px;
+        }
+        p.subtitle {
+            color: #888;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+        .lobby-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+            max-width: 400px;
+        }
+        .game-card {
+            background: linear-gradient(145deg, #14141f, #1a1a2e);
+            border: 2px solid #333;
+            border-radius: 15px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s, border-color 0.2s;
+            text-decoration: none;
+            color: white;
+        }
+        .game-card:active {
+            transform: scale(0.98);
+        }
+        .card-dodge {
+            border-color: #ff2e63;
+            box-shadow: 0 0 15px rgba(255, 46, 99, 0.1);
+        }
+        .card-stickman {
+            border-color: #00adb5;
+            box-shadow: 0 0 15px rgba(0, 173, 181, 0.1);
+        }
+        .game-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+        .card-dodge .game-title { color: #ff2e63; }
+        .card-stickman .game-title { color: #00adb5; }
+        
+        .game-desc {
+            font-size: 14px;
+            color: #ccc;
+            line-height: 1.4;
+            margin-bottom: 15px;
+        }
+        .play-btn {
+            align-self: flex-end;
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+        }
+        .card-dodge .play-btn { background-color: #ff2e63; color: white; }
+        .card-stickman .play-btn { background-color: #00adb5; color: white; }
+
+        footer {
+            margin-top: auto;
+            padding: 20px 0 10px 0;
+            color: #555;
+            font-size: 12px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>ARCADE LOBBY</h1>
+        <p class="subtitle">⚡ 條命好長就入嚟挑戰反應極限 ⚡</p>
+    </header>
+
+    <div class="lobby-container">
+        
+        <a href="game_dodge.html" class="game-card card-dodge">
+            <div class="game-title">🕹️ 極速閃避方塊</div>
+            <div class="game-desc">考驗極速手指反應！長按畫面左右兩邊，閃避從天而降嘅致命紅方塊，隨住分數變高速度會越黎越快！</div>
+            <button class="play-btn">START GAME</button>
+        </a>
+
+        <a href="game_stickman.html" class="game-card card-stickman">
+            <div class="game-title">⚔️ 火柴人左右無雙</div>
+            <div class="game-desc">化身中間嘅武林高手，左右兩邊有大量敵人瘋狂衝過嚟！睇準距離一拳一個將佢哋全部打飛，千祈唔好俾人撞到！</div>
+            <button class="play-btn">START GAME</button>
+        </a>
+
+    </div>
+
+    <footer>
+        由 AI Agent 特約研發 &copy; 2026
+    </footer>
+
+</body>
+</html>
