@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>火柴人左右無雙</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #1a1a1a;
+            color: white;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        #scoreBoard {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #ffd700;
+            text-shadow: 0 0 10px rgba(255,215,0,0.5);
+        }
+        canvas {
+            background-color: #111;
+            border: 3px solid #555;
+            max-width: 95vw;
+            max-height: 65vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+        }
+        #gameOverText {
+            display: none;
+            position: absolute;
+            font-size: 32px;
+            color: #ff3333;
+            font-weight: bold;
+            text-align: center;
+            background: rgba(0,0,0,0.9);
+            padding: 20px 40px;
+            border-radius: 10px;
+            border: 2px solid #ff3333;
+            z-index: 20;
+        }
+        .hint {
+            margin-top: 15px;
+            color: #aaa;
+            font-size: 16px;
+            text-align: center;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="scoreBoard">擊殺數: <span id="score">0</span></div>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    
+    <div id="gameOverText">
+        K.O.<br>
+        <span style="font-size: 18px; color: white;">點擊畫面任何地方復活</span>
+    </div>
+
+    <div class="hint">⚔️ 玩法：敵人接近時，點擊【左/右半邊螢幕】出拳擊飛佢！</div>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const scoreDisplay = document.getElementById("score");
+        const gameOverText = document.getElementById("gameOverText");
+
+        let score = 0;
+        let gameOver = false;
+
+        const player = {
+            x: 200,
+            y: 250,
+            range: 65, 
+            state: "idle", 
+            actionTimer: 0
+        };
+
+        const enemies = [];
+        let spawnTimer = 0;
+        let spawnInterval = 40; 
+        let baseSpeed = 3;
+        const hitEffects = [];
+
+        window.addEventListener("touchstart", (e) => {
+            if (gameOver) {
+                resetGame();
+                return;
+            }
+            const touchX = e.touches[0].clientX;
+            const screenWidth = window.innerWidth;
+            
+            if (touchX < screenWidth / 2) {
+                punch("left");
+            } else {
+                punch("right");
+            }
+        });
+
+        function punch(direction) {
+            if (player.state !== "idle") return;
+            
+            player.state = "punch_" + direction;
+            player.actionTimer = 6; 
+
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                const enemy = enemies[i];
+                if (direction === "left" && enemy.direction === "left" && enemy.x >= player.x - player.range && enemy.x < player.x) {
+                    killEnemy(i, enemy.x, enemy.y);
+                    break; 
+                }
+                if (direction === "right" && enemy.direction === "right" && enemy.x <= player.x + player.range && enemy.x > player.x) {
+                    killEnemy(i, enemy.x, enemy.y);
+                    break;
+                }
+            }
+        }
+
+        function killEnemy(index, x, y) {
+            enemies.splice(index, 1);
+            score++;
+            scoreDisplay.innerText = score;
+            hitEffects.push({ x: x, y: y - 30, timer: 10 });
+        }
+
+        function resetGame() {
+            score = 0;
+            gameOver = false;
+            enemies.length = 0;
+            hitEffects.length = 0;
+            spawnTimer = 0;
+            baseSpeed = 3;
+            spawnInterval = 40;
+            player.state = "idle";
+            scoreDisplay.innerText = score;
+            gameOverText.style.display = "none";
+            update();
+        }
+
+        function drawStickman(x, y, color, isPunching, punchDir, isEnemy, enemyDir) {
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.arc(x, y - 50, 10, 0, Math.PI * 2);
+            ctx.moveTo(x, y - 40);
+            ctx.lineTo(x, y - 15);
+
+            if (isPunching) {
+                ctx.moveTo(x, y - 35);
+                if (punchDir === "left") {
+                    ctx.lineTo(x - 30, y - 35); 
+                    ctx.moveTo(x, y - 35);
+                    ctx.lineTo(x + 10, y - 20); 
+                } else {
+                    ctx.lineTo(x + 30, y - 35); 
+                    ctx.moveTo(x, y - 35);
+                    ctx.lineTo(x - 10, y - 20); 
+                }
+            } else if (isEnemy) {
+                ctx.moveTo(x, y - 35);
+                ctx.lineTo(enemyDir === "left" ? x + 15 : x - 15, y - 20);
+            } else {
+                ctx.moveTo(x, y - 35);
+                ctx.lineTo(x - 15, y - 20);
+                ctx.moveTo(x, y - 35);
+                ctx.lineTo(x + 15, y - 20);
+            }
+
+            ctx.moveTo(x, y - 15);
+            ctx.lineTo(x - 12, y);
+            ctx.moveTo(x, y - 15);
+            ctx.lineTo(x + 12, y);
+            ctx.stroke();
+        }
+
+        function update() {
+            if (gameOver) return;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.strokeStyle = "#555";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, 250);
+            ctx.lineTo(400, 250);
+            ctx.stroke();
+
+            if (player.state !== "idle") {
+                player.actionTimer--;
+                if (player.actionTimer <= 0) player.state = "idle";
+            }
+
+            ctx.strokeStyle = "rgba(0, 173, 181, 0.2)";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(player.x, player.y - 25, player.range, 0, Math.PI * 2);
+            ctx.stroke();
+
+            const isPunching = player.state.startsWith("punch");
+            const punchDir = isPunching ? player.state.split("_")[1] : "";
+            drawStickman(player.x, player.y, "#00adb5", isPunching, punchDir, false);
+
+            spawnTimer++;
+            if (score > 0 && score % 10 === 0) {
+                baseSpeed = 3 + (score / 10) * 0.5;
+                spawnInterval = Math.max(20, 40 - (score / 5));
+            }
+
+            if (spawnTimer >= spawnInterval) {
+                spawnTimer = 0;
+                const dir = Math.random() > 0.5 ? "left" : "right";
+                const startX = dir === "left" ? -20 : 420;
+                enemies.push({ x: startX, y: 250, direction: dir, speed: baseSpeed + Math.random() });
+            }
+
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                const enemy = enemies[i];
+                
+                if (enemy.direction === "left") {
+                    enemy.x += enemy.speed;
+                    if (enemy.x >= player.x - 15) gameOver = true;
+                } else {
+                    enemy.x -= enemy.speed;
+                    if (enemy.x <= player.x + 15) gameOver = true;
+                }
+
+                if (gameOver) {
+                    gameOverText.style.display = "block";
+                    break;
+                }
+
+                drawStickman(enemy.x, enemy.y, "#ff2e63", false, "", true, enemy.direction);
+            }
+
+            for (let i = hitEffects.length - 1; i >= 0; i--) {
+                const effect = hitEffects[i];
+                ctx.fillStyle = "#fffe7a";
+                ctx.beginPath();
+                ctx.arc(effect.x, effect.y, 15 - effect.timer, 0, Math.PI * 2);
+                ctx.fill();
+                effect.timer--;
+                if (effect.timer <= 0) hitEffects.splice(i, 1);
+            }
+
+            requestAnimationFrame(update);
+        }
+
+        update();
+    </script>
+</body>
+</html>
